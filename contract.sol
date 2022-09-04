@@ -1,53 +1,54 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts@4.7.3/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts@4.7.3/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts@4.7.3/utils/Counters.sol";
 
-contract Netflix is ERC721, ERC721Burnable {
+contract Netflix is ERC1155, ERC1155Burnable {
     using Counters for Counters.Counter;
+    Counters.Counter private _tokenIdCounter;
 
 
-    struct SubscribeData{
+     struct SubscribeData{
         uint256 tokenId;
-        uint256 expiry;
+        uint256 expeiry;
     }
 
     mapping(address => SubscribeData)  public addressToSubscrbe;
+    mapping(uint256 => SubscribeData)  public tokenToSubscribe;
     mapping(address => bool) public isSubscribed;
-    
+    mapping(uint256 => bool) public isTokenSubscribed;
+    constructor() ERC1155("") {}
 
-    Counters.Counter private _tokenIdCounter;
-
-    constructor() ERC721("Netflix", "NTF") {}
-
-
-    function subscribe(address to) public returns(bool) {
-        require(to != address(0), "No address found");
-        require(isSubscribed[to] == false, "Already have a subscribtion");
+    function subscribe(address account)
+        public returns(bool)
+    {
+        require(account !=  address(0), "No address found");
         uint256 tokenId = _tokenIdCounter.current();
-        addressToSubscrbe[to] = SubscribeData(
+        tokenToSubscribe[tokenId] = SubscribeData(
             tokenId,
             block.timestamp + 60*60*24*30
         );
-        isSubscribed[to] = true;
+        isTokenSubscribed[tokenId] = true;
         _tokenIdCounter.increment();
-        _safeMint( to,tokenId);  
+        _mint(account, tokenId, 3, "");
         return true;
+       
     }
 
-    function checkExpeiry(address _userAddress)public returns(bool){
-        require(_userAddress != address(0),"No address found");
-        require(isSubscribed[_userAddress] ,"No subscrbtion found");
-        if(block.timestamp > addressToSubscrbe[_userAddress].expiry){
-            _burn(addressToSubscrbe[_userAddress].tokenId);
-           isSubscribed[_userAddress] = false;
+     function checkExpeiry(uint256 _tokenId)public returns(bool){
+        require(_tokenId != 0,"No token found found");
+        require(isTokenSubscribed[_tokenId] ,"No subscrbtion found");
+        if(block.timestamp > tokenToSubscribe[_tokenId].expeiry){
+            _burn(msg.sender,_tokenId, 1);
+           isTokenSubscribed[_tokenId] = false;
             return true;
+
         }
         return false;
     }
-    
 
+    
 
 }
