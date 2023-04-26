@@ -1,1 +1,1 @@
-# DFlix - Decentralized Subscription 
+# De-Flix - Decentralized Subscription 
